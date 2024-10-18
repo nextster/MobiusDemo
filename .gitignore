@@ -1,0 +1,12 @@
+### XCode
+**/xcuserdata
+
+### Pods
+Pods/
+.DS_Store
+
+### Xcode user data
+xcuserdata/
+
+### Git
+*.orig
