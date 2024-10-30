@@ -76,7 +76,6 @@ class MetalView: MTKView, MTKViewDelegate {
                 uniforms.circleMul = fromMul
                 uniforms.fireMul = toMul
             }
-//            print("•", Int(uniforms.circleMul * 100), Int(uniforms.fireMul * 100))
         }
 
         let buf = commandQueue.makeCommandBuffer()!
@@ -91,7 +90,19 @@ class MetalView: MTKView, MTKViewDelegate {
         shapeCommand.setComputePipelineState(shapePipelineState)
         shapeCommand.setBytes(&uniforms, length: MemoryLayout.size(ofValue: uniforms), index: 0)
         shapeCommand.setTexture(drawable.texture, index: 0)
-        shapeCommand.dispatchThreads(size, threadsPerThreadgroup: threadsPerGroup)
+        
+        if device!.supportsFamily(.apple4) {
+            // modern ios devices
+            shapeCommand.dispatchThreads(size, threadsPerThreadgroup: threadsPerGroup)
+        } else {
+            // old ios devices and simulators
+            let threadGroupCount = MTLSize(
+                width: (drawable.texture.width + width - 1) / width,
+                height: (drawable.texture.height + height - 1) / height,
+                depth: 1)
+            shapeCommand.dispatchThreadgroups(threadGroupCount, threadsPerThreadgroup: threadsPerGroup)
+        }
+        
         shapeCommand.endEncoding()
 
         let blurCommand = buf.makeComputeCommandEncoder()!
